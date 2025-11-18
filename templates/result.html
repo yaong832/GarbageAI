@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>예측 결과 - 쓰레기 분류 AI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      max-width: 800px;
+      width: 100%;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+    }
+
+    .image-container {
+      margin: 30px 0;
+      display: inline-block;
+      position: relative;
+    }
+
+    .uploaded-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      max-height: 400px;
+    }
+
+    .result-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 15px;
+      margin: 30px 0;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .result-label {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-transform: capitalize;
+    }
+
+    .result-confidence {
+      font-size: 1.3em;
+      opacity: 0.9;
+    }
+
+    .confidence-bar {
+      width: 100%;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 15px;
+      margin-top: 15px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: white;
+      border-radius: 15px;
+      transition: width 1s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .all-predictions {
+      margin-top: 30px;
+      text-align: left;
+    }
+
+    .all-predictions h3 {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .prediction-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 15px;
+      margin: 8px 0;
+      background: #f8f9ff;
+      border-radius: 10px;
+      border-left: 4px solid #667eea;
+      transition: all 0.3s ease;
+    }
+
+    .prediction-item:hover {
+      background: #f0f2ff;
+      transform: translateX(5px);
+    }
+
+    .prediction-item.top {
+      background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+      border-left-color: #764ba2;
+      font-weight: 600;
+    }
+
+    .prediction-label {
+      text-transform: capitalize;
+      color: #333;
+      flex: 1;
+    }
+
+    .prediction-percent {
+      color: #667eea;
+      font-weight: 600;
+      min-width: 80px;
+      text-align: right;
+    }
+
+    .prediction-bar {
+      width: 150px;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      margin: 0 15px;
+      overflow: hidden;
+    }
+
+    .prediction-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      border-radius: 4px;
+      transition: width 1s ease-out;
+    }
+
+    .button-group {
+      margin-top: 40px;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 15px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    .class-name-ko {
+      font-size: 0.8em;
+      opacity: 0.8;
+      margin-left: 5px;
+    }
+
+    .disposal-guide {
+      margin-top: 40px;
+      background: #f8f9ff;
+      border-radius: 15px;
+      padding: 25px;
+      text-align: left;
+    }
+
+    .disposal-guide h3 {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 1.5em;
+    }
+
+    .disposal-method {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border-left: 4px solid #667eea;
+    }
+
+    .method-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      font-size: 1.1em;
+    }
+
+    .disposal-description {
+      color: #555;
+      line-height: 1.6;
+      margin: 0;
+      font-size: 1.05em;
+    }
+
+    .disposal-tips {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .disposal-tips h4 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+
+    .disposal-tips ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .disposal-tips li {
+      color: #555;
+      padding: 10px 0;
+      padding-left: 25px;
+      position: relative;
+      line-height: 1.6;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .disposal-tips li:last-child {
+      border-bottom: none;
+    }
+
+    .disposal-tips li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #667eea;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 25px;
+      }
+
+      h1 {
+        font-size: 2em;
+      }
+
+      .result-label {
+        font-size: 1.5em;
+      }
+
+      .prediction-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .prediction-bar {
+        width: 100%;
+        margin: 10px 0;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .disposal-guide {
+        padding: 20px;
+      }
+
+      .disposal-guide h3 {
+        font-size: 1.3em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 예측 결과</h1>
+
+    <div class="image-container">
+      <img src="{{ url_for('display_image', filename=filename) }}" 
+           alt="업로드된 이미지" 
+           class="uploaded-image">
+    </div>
+
+    <div class="result-box">
+      <div class="result-label">
+        {{ label }}
+        <span class="class-name-ko">({{ label_ko }})</span>
+      </div>
+      <div class="result-confidence">정확도: {{ confidence }}%</div>
+      <div class="confidence-bar">
+        <div class="confidence-fill" style="width: {{ confidence }}%">{{ confidence }}%</div>
+      </div>
+    </div>
+
+    {% if all_predictions %}
+    <div class="all-predictions">
+      <h3>전체 예측 결과</h3>
+      {% for class_name, percent, class_name_ko in all_predictions %}
+      <div class="prediction-item {% if loop.index == 1 %}top{% endif %}">
+        <span class="prediction-label">
+          {{ class_name }}
+          <span class="class-name-ko">({{ class_name_ko }})</span>
+        </span>
+        <div class="prediction-bar">
+          <div class="prediction-bar-fill" style="width: {{ percent }}%"></div>
+        </div>
+        <span class="prediction-percent">{{ percent }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if disposal_info %}
+    <div class="disposal-guide">
+      <h3>{{ disposal_info.icon }} 처리 방법 안내</h3>
+      <div class="disposal-method">
+        <div class="method-badge">{{ disposal_info.method }}</div>
+        <p class="disposal-description">{{ disposal_info.description }}</p>
+      </div>
+      {% if disposal_info.tips %}
+      <div class="disposal-tips">
+        <h4>💡 처리 팁</h4>
+        <ul>
+          {% for tip in disposal_info.tips %}
+          <li>{{ tip }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="button-group">
+      <a href="/" class="btn btn-primary">🔄 다른 이미지 예측하기</a>
+    </div>
+  </div>
+
+  <script>
+    // 애니메이션을 위한 지연 실행
+    window.addEventListener('load', function() {
+      const fills = document.querySelectorAll('.confidence-fill, .prediction-bar-fill');
+      fills.forEach(fill => {
+        const width = fill.style.width;
+        fill.style.width = '0%';
+        setTimeout(() => {
+          fill.style.width = width;
+        }, 100);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>쓰레기 분류 AI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+
+    .upload-area {
+      border: 3px dashed #667eea;
+      border-radius: 15px;
+      padding: 40px 20px;
+      margin: 30px 0;
+      background: #f8f9ff;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .upload-area:hover {
+      border-color: #764ba2;
+      background: #f0f2ff;
+      transform: scale(1.02);
+    }
+
+    .upload-area.dragover {
+      border-color: #764ba2;
+      background: #e8ebff;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-label {
+      display: inline-block;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1em;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .file-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .file-name {
+      margin-top: 15px;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .submit-btn {
+      margin-top: 25px;
+      padding: 15px 50px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.2em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .info-box {
+      background: #e8f4f8;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      margin-top: 30px;
+      border-radius: 5px;
+      text-align: left;
+    }
+
+    .info-box h3 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    .info-box ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .info-box li {
+      color: #666;
+      margin: 5px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .info-box li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .flash-messages {
+      margin-bottom: 20px;
+    }
+
+    .flash-message {
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background: #fee;
+      color: #c33;
+      border-left: 4px solid #c33;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 25px;
+      }
+
+      h1 {
+        font-size: 2em;
+      }
+
+      .upload-area {
+        padding: 30px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗑️ 쓰레기 분류 AI</h1>
+    <p class="subtitle">이미지를 업로드하여 쓰레기 종류를 분류해보세요</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form action="/predict" method="POST" enctype="multipart/form-data" id="uploadForm">
+      <div class="upload-area" id="uploadArea">
+        <div class="file-input-wrapper">
+          <input type="file" name="file" id="fileInput" accept="image/*" required>
+          <label for="fileInput" class="file-label">📁 이미지 선택</label>
+        </div>
+        <div class="file-name" id="fileName">선택된 파일이 없습니다</div>
+      </div>
+      <button type="submit" class="submit-btn" id="submitBtn">🔍 분류하기</button>
+    </form>
+
+    <div class="info-box">
+      <h3>지원하는 쓰레기 종류</h3>
+      <ul>
+        <li>배터리 (Battery)</li>
+        <li>생물학적 쓰레기 (Biological)</li>
+        <li>골판지 (Cardboard)</li>
+        <li>유리 (Glass)</li>
+        <li>금속 (Metal)</li>
+        <li>종이 (Paper)</li>
+        <li>플라스틱 (Plastic)</li>
+        <li>일반 쓰레기 (Trash)</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const uploadArea = document.getElementById('uploadArea');
+    const submitBtn = document.getElementById('submitBtn');
+
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0) {
+        fileName.textContent = '선택된 파일: ' + e.target.files[0].name;
+        submitBtn.disabled = false;
+      } else {
+        fileName.textContent = '선택된 파일이 없습니다';
+        submitBtn.disabled = true;
+      }
+    });
+
+    // 드래그 앤 드롭 기능
+    uploadArea.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        fileInput.files = files;
+        fileName.textContent = '선택된 파일: ' + files[0].name;
+        submitBtn.disabled = false;
+      }
+    });
+
+    // 폼 제출 시 로딩 표시
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+      if (!fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        alert('이미지를 선택해주세요.');
+        return false;
+      }
+      submitBtn.disabled = true;
+      submitBtn.textContent = '분류 중...';
+      return true;
+    });
+  </script>
+</body>
+</html>
