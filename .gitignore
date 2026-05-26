@@ -1,0 +1,33 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+
+# 환경/비밀
+.env
+*.env
+
+# 업로드·학습 데이터 (로컬 전용)
+static/uploads/
+data/garbage_dataset/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# 큰 모델
+*.pt
+*.pth
+*.h5
+*.onnx
+models/

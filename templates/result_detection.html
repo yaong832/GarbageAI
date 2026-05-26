@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>탐지 결과 - 쓰레기 탐지 AI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+      text-align: center;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 1.1em;
+    }
+
+    .image-container {
+      margin: 30px 0;
+      text-align: center;
+      position: relative;
+    }
+
+    .detected-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      max-height: 600px;
+    }
+
+    .summary-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 15px;
+      margin: 30px 0;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+      text-align: center;
+    }
+
+    .summary-title {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .summary-text {
+      font-size: 1.2em;
+      opacity: 0.9;
+    }
+
+    .detections-list {
+      margin-top: 30px;
+    }
+
+    .detections-list h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.8em;
+    }
+
+    .detection-item {
+      background: #f8f9ff;
+      border-left: 4px solid #667eea;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .detection-item:hover {
+      background: #f0f2ff;
+      transform: translateX(5px);
+    }
+
+    .detection-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .detection-class {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #333;
+      text-transform: capitalize;
+    }
+
+    .detection-confidence {
+      font-size: 1.1em;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .detection-details {
+      color: #666;
+      margin-top: 10px;
+      font-size: 0.95em;
+    }
+
+    .detection-bbox {
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 0.85em;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    .status-mapped {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-new {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-pending {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .button-group {
+      margin-top: 40px;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 15px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    .no-detections {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 1.2em;
+    }
+
+    .saved-info {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 5px;
+      color: #155724;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 25px;
+      }
+
+      h1 {
+        font-size: 2em;
+      }
+
+      .detection-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 탐지 결과</h1>
+    <p class="subtitle">이미지에서 탐지된 쓰레기 객체들</p>
+
+    <div class="summary-box">
+      <div class="summary-title">총 {{ num_detections }}개의 객체 탐지</div>
+      {% if saved_count > 0 %}
+      <div class="summary-text" style="margin-top: 10px;">
+        ✅ {{ saved_count }}개의 객체가 학습 데이터로 저장되었습니다
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="image-container">
+      <img src="{{ url_for('static', filename='detection_results/' + result_image) }}" 
+           alt="탐지 결과 이미지" 
+           class="detected-image">
+    </div>
+
+    {% if num_detections > 0 %}
+    <div class="detections-list">
+      <h2>탐지된 객체 목록</h2>
+      
+      {% for detection in detections %}
+      <div class="detection-item">
+        <div class="detection-header">
+          <div>
+            <span class="detection-class">{{ detection.class_name }}</span>
+            {% if detection.status == 'mapped' %}
+            <span class="status-badge status-mapped">매핑됨</span>
+            {% elif detection.status == 'new_candidate' %}
+            <span class="status-badge status-new">새 클래스</span>
+            {% elif detection.status == 'pending' %}
+            <span class="status-badge status-pending">승인 대기</span>
+            {% endif %}
+          </div>
+          <div class="detection-confidence">{{ (detection.confidence * 100) | round(1) }}%</div>
+        </div>
+        
+        <div class="detection-details">
+          {% if detection.taco_class != detection.mapped_class %}
+          <div><strong>원본 클래스:</strong> {{ detection.taco_class }}</div>
+          <div><strong>매핑된 클래스:</strong> {{ detection.mapped_class }}</div>
+          {% else %}
+          <div><strong>클래스:</strong> {{ detection.class_name }}</div>
+          {% endif %}
+          
+          <div class="detection-bbox">
+            <strong>바운딩 박스:</strong> 
+            [x1: {{ detection.bbox_xyxy[0] | int }}, 
+             y1: {{ detection.bbox_xyxy[1] | int }}, 
+             x2: {{ detection.bbox_xyxy[2] | int }}, 
+             y2: {{ detection.bbox_xyxy[3] | int }}]
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-detections">
+      <p>탐지된 객체가 없습니다.</p>
+      <p style="margin-top: 10px; font-size: 0.9em; color: #999;">
+        이미지에서 쓰레기 객체를 찾을 수 없었습니다. 다른 이미지를 시도해보세요.
+      </p>
+    </div>
+    {% endif %}
+
+    {% if saved_count > 0 %}
+    <div class="saved-info">
+      <strong>✅ 학습 데이터 저장 완료</strong><br>
+      {{ saved_count }}개의 객체 이미지가 클래스별 폴더에 저장되었습니다.
+      이 데이터는 다음 모델 재훈련에 사용됩니다.
+    </div>
+    {% endif %}
+
+    <div class="button-group">
+      <a href="/" class="btn btn-primary">🔄 다른 이미지 분석하기</a>
+      <a href="/" class="btn btn-secondary">🏠 홈으로</a>
+    </div>
+  </div>
+</body>
+</html>
+

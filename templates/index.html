@@ -203,8 +203,8 @@
 </head>
 <body>
   <div class="container">
-    <h1>🗑️ 쓰레기 분류 AI</h1>
-    <p class="subtitle">이미지를 업로드하여 쓰레기 종류를 분류해보세요</p>
+    <h1>🗑️ 쓰레기 분석 AI</h1>
+    <p class="subtitle">이미지를 업로드하여 쓰레기 종류를 분석하고 학습 데이터로 활용하세요</p>
 
     {% with messages = get_flashed_messages() %}
       {% if messages %}
@@ -224,22 +224,18 @@
         </div>
         <div class="file-name" id="fileName">선택된 파일이 없습니다</div>
       </div>
-      <button type="submit" class="submit-btn" id="submitBtn">🔍 분류하기</button>
+      <button type="submit" class="submit-btn" id="submitBtn">🔍 분석하기</button>
     </form>
-
-    <div class="info-box">
-      <h3>지원하는 쓰레기 종류</h3>
+    
+    <div class="info-box" style="margin-top: 30px;">
+      <h3>💡 분석 기능 안내</h3>
       <ul>
-        <li>배터리 (Battery)</li>
-        <li>생물학적 쓰레기 (Biological)</li>
-        <li>골판지 (Cardboard)</li>
-        <li>유리 (Glass)</li>
-        <li>금속 (Metal)</li>
-        <li>종이 (Paper)</li>
-        <li>플라스틱 (Plastic)</li>
-        <li>일반 쓰레기 (Trash)</li>
+        <li>이미지를 업로드하면 AI가 쓰레기 종류를 분석합니다</li>
+        <li>신뢰도 50% 이상인 경우 자동으로 학습 데이터로 저장됩니다</li>
+        <li>저장된 데이터는 모델 재훈련에 사용되어 정확도가 향상됩니다</li>
       </ul>
     </div>
+
   </div>
 
   <script>
@@ -280,6 +276,64 @@
       }
     });
 
+    // 탐지 모드 사용 가능 여부 확인
+    const detectionAvailable = {{ 'true' if detection_available else 'false' }};
+    const detectionModeLabel = document.getElementById('detectionModeLabel');
+    const detectionModeRadio = document.getElementById('detectionModeRadio');
+    
+    if (!detectionAvailable) {
+      detectionModeLabel.style.opacity = '0.5';
+      detectionModeLabel.style.cursor = 'not-allowed';
+      detectionModeRadio.disabled = true;
+      detectionModeLabel.title = '탐지 모드는 현재 사용할 수 없습니다. NumPy 1.x가 필요합니다.';
+    }
+    
+    // 모드 선택에 따른 설명 변경
+    const modeInputs = document.querySelectorAll('input[name="mode"]');
+    const modeDescription = document.getElementById('modeDescription');
+    
+    modeInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        if (this.disabled) {
+          // 탐지 모드가 비활성화된 경우 분류 모드로 되돌림
+          document.querySelector('input[value="classification"]').checked = true;
+          return;
+        }
+        
+        const form = document.getElementById('uploadForm');
+        if (this.value === 'detection') {
+          form.action = '/predict-detection';
+          modeDescription.textContent = '탐지 모드: 이미지에서 여러 쓰레기 객체를 탐지하고 위치를 표시합니다.';
+          submitBtn.textContent = '🎯 탐지하기';
+        } else {
+          form.action = '/predict';
+          modeDescription.textContent = '분류 모드: 이미지 전체를 하나의 쓰레기 종류로 분류합니다.';
+          submitBtn.textContent = '🔍 분류하기';
+        }
+      });
+    });
+
+    // 모드 선택 라벨 스타일
+    modeInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        modeInputs.forEach(inp => {
+          const label = inp.closest('label');
+          if (inp.checked) {
+            label.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            label.style.color = 'white';
+            label.style.borderColor = '#764ba2';
+          } else {
+            label.style.background = '#f8f9ff';
+            label.style.color = '#333';
+            label.style.borderColor = '#667eea';
+          }
+        });
+      });
+    });
+
+    // 초기 모드 스타일 적용
+    modeInputs[0].dispatchEvent(new Event('change'));
+
     // 폼 제출 시 로딩 표시
     document.getElementById('uploadForm').addEventListener('submit', function(e) {
       if (!fileInput.files || fileInput.files.length === 0) {
@@ -288,7 +342,8 @@
         return false;
       }
       submitBtn.disabled = true;
-      submitBtn.textContent = '분류 중...';
+      const selectedMode = document.querySelector('input[name="mode"]:checked').value;
+      submitBtn.textContent = selectedMode === 'detection' ? '탐지 중...' : '분류 중...';
       return true;
     });
   </script>

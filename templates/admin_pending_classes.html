@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>승인 대기 클래스 - 관리자</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .pending-item {
+      background: #f8f9ff;
+      border-left: 4px solid #667eea;
+      padding: 25px;
+      margin: 20px 0;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .pending-item:hover {
+      background: #f0f2ff;
+      transform: translateX(5px);
+    }
+
+    .pending-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .pending-class-name {
+      font-size: 1.5em;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .pending-info {
+      color: #666;
+      font-size: 0.95em;
+      margin: 5px 0;
+    }
+
+    .sample-images {
+      display: flex;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+
+    .sample-image {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid #667eea;
+    }
+
+    .action-form {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 2px solid #e0e0e0;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-approve {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-approve:hover {
+      background: #218838;
+      transform: translateY(-2px);
+    }
+
+    .btn-reject {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-reject:hover {
+      background: #c82333;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+      transform: translateY(-2px);
+    }
+
+    .no-pending {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+      font-size: 1.2em;
+    }
+
+    .stats-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 0.85em;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    .badge-count {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .badge-confidence {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .navigation {
+      margin-bottom: 30px;
+    }
+
+    .nav-link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="navigation">
+      <a href="/admin" class="nav-link">← 관리자 홈</a>
+    </div>
+
+    <h1>⏳ 승인 대기 클래스</h1>
+    <p class="subtitle">새로 발견된 클래스를 검토하고 승인하거나 거부하세요</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if pending_classes %}
+      {% for pending in pending_classes %}
+      <div class="pending-item">
+        <div class="pending-header">
+          <div>
+            <div class="pending-class-name">
+              {{ pending.taco_class }}
+              <span class="stats-badge badge-count">{{ pending.count }}개</span>
+              <span class="stats-badge badge-confidence">{{ (pending.confidence * 100) | round(1) }}%</span>
+            </div>
+            <div class="pending-info">
+              <strong>제안된 이름:</strong> {{ pending.normalized_name }}
+            </div>
+            <div class="pending-info">
+              <strong>최초 발견:</strong> {{ pending.first_seen[:10] }}
+            </div>
+          </div>
+        </div>
+
+        {% if pending.sample_images %}
+        <div class="sample-images">
+          {% for img in pending.sample_images %}
+          <img src="{{ url_for('display_pending_image', class_name=pending.normalized_name, filename=img) }}" 
+               alt="샘플 이미지" 
+               class="sample-image"
+               onerror="this.style.display='none'">
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="action-form">
+          <form method="POST" action="/admin/approve-class" style="display: inline;">
+            <input type="hidden" name="taco_class" value="{{ pending.taco_class }}">
+            <div class="form-group">
+              <label for="approved_name_{{ loop.index }}">승인할 클래스 이름 (선택사항, 비워두면 제안된 이름 사용):</label>
+              <input type="text" 
+                     id="approved_name_{{ loop.index }}" 
+                     name="approved_name" 
+                     value="{{ pending.normalized_name }}"
+                     placeholder="{{ pending.normalized_name }}">
+            </div>
+            <div class="button-group">
+              <button type="submit" class="btn btn-approve">✅ 승인</button>
+            </div>
+          </form>
+
+          <form method="POST" action="/admin/reject-class" style="display: inline; margin-left: 10px;">
+            <input type="hidden" name="taco_class" value="{{ pending.taco_class }}">
+            <div class="form-group">
+              <label for="mapped_to_{{ loop.index }}">기존 클래스로 매핑:</label>
+              <select id="mapped_to_{{ loop.index }}" name="mapped_to">
+                <option value="trash">일반 쓰레기</option>
+                <option value="plastic">플라스틱</option>
+                <option value="metal">금속</option>
+                <option value="glass">유리</option>
+                <option value="paper">종이</option>
+                <option value="cardboard">골판지</option>
+                <option value="battery">배터리</option>
+                <option value="biological">생물학적 쓰레기</option>
+              </select>
+            </div>
+            <div class="button-group">
+              <button type="submit" class="btn btn-reject">❌ 거부 및 매핑</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="no-pending">
+        <p>승인 대기 중인 클래스가 없습니다.</p>
+        <p style="margin-top: 10px; font-size: 0.9em; color: #999;">
+          새로운 클래스가 탐지되면 여기에 표시됩니다.
+        </p>
+      </div>
+    {% endif %}
+
+    <div class="button-group" style="margin-top: 40px; justify-content: center;">
+      <a href="/admin" class="btn btn-secondary">← 관리자 홈</a>
+      <a href="/" class="btn btn-secondary">🏠 메인 홈</a>
+    </div>
+  </div>
+</body>
+</html>
+

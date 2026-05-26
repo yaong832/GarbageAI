@@ -340,7 +340,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>🧠 예측 결과</h1>
+    <h1>🧠 분석 결과</h1>
 
     <div class="image-container">
       <img src="{{ url_for('display_image', filename=filename) }}" 
@@ -397,8 +397,15 @@
     </div>
     {% endif %}
 
+    {% if training_saved %}
+    <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin-top: 20px; border-radius: 5px; color: #155724;">
+      <strong>✅ 학습 데이터로 저장되었습니다</strong><br>
+      이 이미지는 모델 재훈련에 사용되어 정확도 향상에 기여합니다.
+    </div>
+    {% endif %}
+
     <div class="button-group">
-      <a href="/" class="btn btn-primary">🔄 다른 이미지 예측하기</a>
+      <a href="/" class="btn btn-primary">🔄 다른 이미지 분석하기</a>
     </div>
   </div>
 

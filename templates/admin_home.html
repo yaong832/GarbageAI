@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 페이지 - 쓰레기 분류 AI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+      text-align: center;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 1.1em;
+    }
+
+    .admin-menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .menu-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .menu-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    }
+
+    .menu-icon {
+      font-size: 3em;
+      margin-bottom: 15px;
+    }
+
+    .menu-title {
+      font-size: 1.5em;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .menu-description {
+      font-size: 0.95em;
+      opacity: 0.9;
+    }
+
+    .button-group {
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin: 0 10px;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    .flash-messages {
+      margin-bottom: 20px;
+    }
+
+    .flash-message {
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background: #fee;
+      color: #c33;
+      border-left: 4px solid #c33;
+    }
+
+    .flash-message.success {
+      background: #d4edda;
+      color: #155724;
+      border-left-color: #28a745;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚙️ 관리자 페이지</h1>
+    <p class="subtitle">시스템 관리 및 모니터링</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="admin-menu">
+      <a href="/admin/pending-classes" class="menu-card">
+        <div class="menu-icon">⏳</div>
+        <div class="menu-title">승인 대기 클래스</div>
+        <div class="menu-description">새로 발견된 클래스 승인/거부</div>
+      </a>
+
+      <a href="/admin/classes" class="menu-card">
+        <div class="menu-icon">📊</div>
+        <div class="menu-title">클래스 통계</div>
+        <div class="menu-description">클래스별 이미지 개수 및 통계</div>
+      </a>
+    </div>
+
+    <div class="button-group">
+      <a href="/" class="btn btn-secondary">🏠 홈으로</a>
+    </div>
+  </div>
+</body>
+</html>
+

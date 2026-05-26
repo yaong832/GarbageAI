@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>클래스 통계 - 관리자</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .stat-value {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .classes-list {
+      margin-top: 30px;
+    }
+
+    .class-item {
+      background: #f8f9ff;
+      border-left: 4px solid #667eea;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .class-item:hover {
+      background: #f0f2ff;
+      transform: translateX(5px);
+    }
+
+    .class-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .class-icon {
+      font-size: 2em;
+    }
+
+    .class-details {
+      flex: 1;
+    }
+
+    .class-name {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .class-name-ko {
+      color: #666;
+      font-size: 0.95em;
+    }
+
+    .class-count {
+      font-size: 1.5em;
+      font-weight: 600;
+      color: #667eea;
+      min-width: 100px;
+      text-align: right;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      border-radius: 4px;
+      transition: width 1s ease-out;
+    }
+
+    .navigation {
+      margin-bottom: 30px;
+    }
+
+    .nav-link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+
+    .button-group {
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin: 0 10px;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="navigation">
+      <a href="/admin" class="nav-link">← 관리자 홈</a>
+    </div>
+
+    <h1>📊 클래스 통계</h1>
+    <p class="subtitle">클래스별 이미지 개수 및 통계 정보</p>
+
+    <div class="stats-summary">
+      <div class="stat-card">
+        <div class="stat-value">{{ total_classes }}</div>
+        <div class="stat-label">총 클래스 수</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ total_images }}</div>
+        <div class="stat-label">총 이미지 수</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ (total_images / total_classes) | round(0) if total_classes > 0 else 0 }}</div>
+        <div class="stat-label">클래스당 평균</div>
+      </div>
+    </div>
+
+    <div class="classes-list">
+      <h2 style="color: #333; margin-bottom: 20px;">클래스별 상세 정보</h2>
+      
+      {% set max_count = classes | map(attribute='image_count') | max if classes else 1 %}
+      
+      {% for class_info in classes | sort(attribute='image_count', reverse=true) %}
+      <div class="class-item">
+        <div class="class-info">
+          <div class="class-icon">{{ class_info.icon }}</div>
+          <div class="class-details">
+            <div class="class-name">
+              {{ class_info.name }}
+              <span class="class-name-ko">({{ class_info.name_ko }})</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" 
+                   style="width: {{ (class_info.image_count / max_count * 100) | round(1) }}%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="class-count">{{ class_info.image_count }}개</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="button-group">
+      <a href="/admin" class="btn btn-secondary">← 관리자 홈</a>
+      <a href="/" class="btn btn-secondary">🏠 메인 홈</a>
+    </div>
+  </div>
+
+  <script>
+    // 프로그레스 바 애니메이션
+    window.addEventListener('load', function() {
+      const fills = document.querySelectorAll('.progress-fill');
+      fills.forEach(fill => {
+        const width = fill.style.width;
+        fill.style.width = '0%';
+        setTimeout(() => {
+          fill.style.width = width;
+        }, 100);
+      });
+    });
+  </script>
+</body>
+</html>
+
