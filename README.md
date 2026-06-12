@@ -1,5 +1,7 @@
 # 쓰레기 분류 AI 프로젝트
 
+> 📂 [포트폴리오 (Notion)](https://iced-tarsier-455.notion.site/350af40f5e6680d19f93f1653925a3b8) · 🎥 [시연 영상](https://youtu.be/_AzK80T7Q70)
+
 이미지를 업로드하여 8가지 쓰레기 종류를 자동으로 분류하는 웹 애플리케이션입니다.
 
 ## 기능
