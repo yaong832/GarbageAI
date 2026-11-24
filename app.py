@@ -65,7 +65,9 @@ except Exception as e:
 
 # Flask 앱 초기화
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'garbage_classification_secret_key_2024')
+# 세션·flash 메시지 서명용 키. 코드에 고정 값을 두면 누구나 알 수 있으므로,
+# 환경 변수 SECRET_KEY가 없으면 실행할 때마다 임의로 만든다.
+app.secret_key = os.environ.get('SECRET_KEY') or os.urandom(24)
 
 # 설정
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
@@ -355,8 +357,10 @@ def display_image(filename):
 @app.route('/display-pending/<class_name>/<filename>')
 def display_pending_image(class_name, filename):
     """pending 폴더의 이미지 표시"""
-    pending_path = os.path.join(DATA_DIR, 'pending', class_name, filename)
-    if os.path.exists(pending_path):
+    # '..' 같은 경로로 pending 폴더 밖의 파일을 읽지 못하게 막는다
+    pending_root = os.path.abspath(os.path.join(DATA_DIR, 'pending'))
+    pending_path = os.path.abspath(os.path.join(pending_root, class_name, filename))
+    if pending_path.startswith(pending_root + os.sep) and os.path.isfile(pending_path):
         from flask import send_file
         return send_file(pending_path)
     else:
@@ -763,9 +767,14 @@ if __name__ == '__main__':
 
     threading.Thread(target=open_browser, daemon=True).start()
 
+    # GARBAGE_FLASK_HOST: 기본 0.0.0.0(다른 PC에서 접속 가능). 같은 PC에서만 쓰면 127.0.0.1
+    # GARBAGE_FLASK_DEBUG=1 일 때만 디버그 모드 (개발용. 디버그 모드는 오류 화면에서 코드 실행이 가능해 위험)
+    host = os.environ.get('GARBAGE_FLASK_HOST', '0.0.0.0').strip() or '0.0.0.0'
+    debug = os.environ.get('GARBAGE_FLASK_DEBUG', '').strip().lower() in ('1', 'true', 'yes')
+
     print("\n" + "=" * 50)
     print("쓰레기 분류 Flask 서버를 시작합니다...")
-    print("서버 주소: http://127.0.0.1:5000")
+    print(f"서버 주소: http://127.0.0.1:5000 (바인딩 {host}, 디버그 {'켜짐' if debug else '꺼짐'})")
     print("=" * 50 + "\n")
 
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(host=host, port=5000, debug=debug, use_reloader=False)
