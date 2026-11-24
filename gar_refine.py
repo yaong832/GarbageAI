@@ -19,6 +19,11 @@ EPOCHS = 20  # 추가 학습 에포크
 LEARNING_RATE = 0.00001  # 매우 낮은 학습률로 미세 조정
 VALIDATION_SPLIT = 0.2
 
+# 학습할 클래스 (app.py의 CLASSES, 저장된 모델의 출력 순서와 같아야 함)
+# 지정하지 않으면 DATA_DIR 아래 모든 폴더(TACO 탐지가 만드는 pending/, 승인한 새 클래스 폴더 등)가
+# 클래스로 잡혀서 8개 출력 모델과 맞지 않게 된다.
+CLASSES = ['battery', 'biological', 'cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
+
 # 모델 파일 확인
 if not os.path.exists(MODEL_SAVE_PATH):
     print(f"[오류] 모델 파일을 찾을 수 없습니다: {MODEL_SAVE_PATH}")
@@ -99,6 +104,7 @@ train_generator = train_datagen.flow_from_directory(
     target_size=(IMG_SIZE, IMG_SIZE),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
+    classes=CLASSES,
     subset='training',
     shuffle=True
 )
@@ -108,6 +114,7 @@ validation_generator = val_datagen.flow_from_directory(
     target_size=(IMG_SIZE, IMG_SIZE),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
+    classes=CLASSES,
     subset='validation',
     shuffle=False
 )
