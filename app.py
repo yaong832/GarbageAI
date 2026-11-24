@@ -23,6 +23,7 @@ from tensorflow.keras.preprocessing import image
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import shutil
+import uuid
 import json
 from PIL import Image, ImageDraw, ImageFont
 
@@ -214,6 +215,19 @@ print(f"✅ 모델 로드 완료: {MODEL_PATH}")
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def make_upload_filename(original_filename):
+    """
+    업로드 파일을 저장할 이름을 만든다. (항상 확장자가 붙고, 겹치지 않음)
+
+    secure_filename은 영문·숫자 외 글자를 지우기 때문에 '사진.jpg'가 'jpg'가 된다.
+    그러면 한글 이름 사진이 모두 같은 파일에 덮어써지고, 학습용 복사본에 확장자가 없어
+    학습 때 빠진다. 그래서 확장자는 원래 이름에서 따로 떼고, 시각+랜덤 문자열을 붙인다.
+    """
+    ext = original_filename.rsplit('.', 1)[1].lower()  # allowed_file로 이미 확인한 확장자
+    stem = secure_filename(original_filename.rsplit('.', 1)[0])
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
+    return f"{stem}_{stamp}.{ext}" if stem else f"{stamp}.{ext}"
+
 def save_image_for_training(filepath, predicted_class, confidence, original_filename):
     """
     예측된 이미지를 학습 데이터로 저장
@@ -274,7 +288,7 @@ def predict():
         return redirect(request.url)
 
     try:
-        filename = secure_filename(file.filename)
+        filename = make_upload_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
@@ -432,7 +446,7 @@ def predict_detection():
         return redirect(url_for('home'))
     
     try:
-        filename = secure_filename(file.filename)
+        filename = make_upload_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
