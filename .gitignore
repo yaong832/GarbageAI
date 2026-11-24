@@ -15,7 +15,12 @@ build/
 
 # 업로드·학습 데이터 (로컬 전용)
 static/uploads/
+static/detection_results/
 data/garbage_dataset/
+
+# 관리자 화면에서 만든 클래스 매핑 (로컬 상태)
+class_mappings.json
+pending_classes.json
 
 # IDE
 .idea/
@@ -31,3 +36,4 @@ Thumbs.db
 *.h5
 *.onnx
 models/
+model/*_backup.keras
