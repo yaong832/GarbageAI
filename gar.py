@@ -20,6 +20,8 @@ BATCH_SIZE = 32
 EPOCHS = 30
 LEARNING_RATE = 0.0001  # 전이학습에 적합한 낮은 학습률
 VALIDATION_SPLIT = 0.2
+# 학습할 클래스 (app.py의 CLASSES와 같은 순서). flow_from_directory에 그대로 넘긴다.
+# 지정하지 않으면 DATA_DIR 아래 모든 폴더(TACO 탐지가 만드는 pending/ 등)가 클래스로 잡힌다.
 CLASSES = ['battery', 'biological', 'cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
 NUM_CLASSES = len(CLASSES)
 
@@ -76,6 +78,7 @@ train_generator = train_datagen.flow_from_directory(
     target_size=(IMG_SIZE, IMG_SIZE),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
+    classes=CLASSES,
     subset='training',
     shuffle=True
 )
@@ -85,6 +88,7 @@ validation_generator = val_datagen.flow_from_directory(
     target_size=(IMG_SIZE, IMG_SIZE),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
+    classes=CLASSES,
     subset='validation',
     shuffle=False
 )
